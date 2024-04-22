@@ -1,100 +1,101 @@
-import recettes from "../../data/recettes.json";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // Importation des hooks useState et useEffect depuis React
+import recettes from "../../data/recettes.json"
+// Définition du composant ApiK avec ses props
+function ApiK({ searchValue, favorites, setFavorites, manageFavorite}) {
+  const [card, setCard] = useState([]); // État local pour stocker les données des cartes
+  const [isSearchEmpty, setIsSearchEmpty] = useState(false); // État local pour indiquer si la recherche est vide
+  const [isFavorite, setIsFavorite] = useState(false); // État local pour indiquer si l'élément est favori
 
-function ApiK({ searchValue, setSearchValue, favorites, setFavorites, manageSort, manageFavorite, setManageFavorite}) {
-  const [card, setCard] = useState([]);
-  const [isSearchEmpty, setIsSearchEmpty] = useState(false);
-
-  useEffect(() => {
-    // Chargement des données initiales
-    FetchData();
-  }, []);
-
-
-  const FetchData = () => {
-    // Utilisation directe des données importées
-    setCard(recettes);
+  // Fonction pour basculer l'état isFavorite
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
   };
 
+  // Effet de chargement des données initiales, se déclenche une seule fois au montage du composant
   useEffect(() => {
-    // Filtrage des données en fonction de la recherche
+    FetchData(); // Appel de la fonction FetchData()
+  }, []);
+
+  // Fonction pour charger les données initiales
+  const FetchData = () => {
+    setCard(recettes); // Utilisation directe des données importées depuis recettes.json
+  };
+
+  // Effet pour filtrer les données en fonction de la recherche
+  useEffect(() => {
     if (searchValue && searchValue.length > 0) {
       const resultFilter = recettes.filter((cardUnique) =>
         cardUnique.title.toLowerCase().includes(searchValue.toLowerCase())
       );
       if (resultFilter.length > 0) {
-        setCard(resultFilter);
-        setIsSearchEmpty(false);
+        setCard(resultFilter); // Met à jour les cartes filtrées
+        setIsSearchEmpty(false); // Indique que la recherche n'est pas vide
       } else {
-        setIsSearchEmpty(true);
+        setIsSearchEmpty(true); // Indique que la recherche est vide
       }
     } else {
-      setCard(recettes);
-      setIsSearchEmpty(false);
+      setCard(recettes); // Charge toutes les cartes si la recherche est vide
+      setIsSearchEmpty(false); // Indique que la recherche n'est pas vide
     }
   }, [searchValue]);
 
+  // Fonction pour ajouter une carte aux favoris
   const handleAddFavorite = (id) => {
     const updatedCard = card.map((item) =>
       item.id === id ? { ...item, favorite: true } : item
     );
-    setCard(updatedCard);
+    setCard(updatedCard); // Met à jour les cartes avec la nouvelle carte favorite
     const favoriteElement = card.find((item) => item.id === id);
-    setFavorites([...favorites, favoriteElement]);
+    setFavorites([...favorites, favoriteElement]); // Ajoute la nouvelle carte aux favoris
   };
 
-
+  // Fonction pour retirer une carte des favoris
   const handleRemoveFavorite = (id) => {
     const updatedFavorites = favorites.filter((element) => element.id !== id);
-    setFavorites(updatedFavorites);
+    setFavorites(updatedFavorites); // Met à jour la liste des favoris en retirant la carte spécifiée
     const updatedCard = card.map((item) =>
       item.id === id ? { ...item, favorite: false } : item
     );
-    setCard(updatedCard);
-    console.log(updatedCard);
+    setCard(updatedCard); // Met à jour les cartes pour refléter le retrait du favori
+    console.log(updatedCard); // Affiche les cartes mises à jour dans la console
   };
 
+  // Rendu du composant
   return (
-    <div className={`flex-row flex-wrap gap-10 justify-center ${!manageFavorite ? "flex" : "hidden" }`}>
-      {isSearchEmpty ? (
+    <div className={`flex-row flex-wrap gap-10 justify-center relative ${!manageFavorite ? "flex" : "hidden" }`}>
+      {isSearchEmpty ? ( // Affiche un message si aucune carte ne correspond à la recherche
         <div>Aucun résultat trouvé</div>
       ) : (
-        card.map((Element, id) => (
+        card.map((Element, id) => ( // Mappe chaque élément de la liste de cartes
           <div
             key={id}
             className="w-full max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
           >
-            <a href="#">
-              <img
-                className="rounded-t-lg"
-                src={Element.imageUrl}
-                alt="product image"
-              />
-            </a>
-            <div className="px-5 pb-5">
+            <div className="justify-end flex">
               <a href="#">
-                <h5 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-                  {Element.title}
-                </h5>
+                <img
+                  className="rounded-t-lg"
+                  src={Element.imageUrl}
+                  alt="product image"
+                />
               </a>
-              <div className="flex items-center mt-2.5 mb-5">
-                <div className="flex items-center space-x-1 rtl:space-x-reverse">
-                  <button
-                    onClick={() =>
-                      Element.favorite
-                        ? handleRemoveFavorite(Element.id)
-                        : handleAddFavorite(Element.id) 
-                    }
-                  >
-                    {Element.favorite ? (
-                      <svg
+              <button className="absolute p-2 text-white"
+                      onClick={() =>
+                        Element.favorite // Vérifie si l'élément est déjà favori ou non
+                          ? handleRemoveFavorite(Element.id) // Si oui, le retire des favoris
+                          : handleAddFavorite(Element.id) // Sinon, l'ajoute aux favoris
+                      }
+                    >
+                      {Element.favorite ? ( // Affiche un cœur rouge si l'élément est favori, sinon un cœur blanc
+                        <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
+                        fillRule={isFavorite ? "red" : "white"}
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}
-                        stroke="currentColor"
+                        stroke={isFavorite ? "red" : "white"}
                         className="w-6 h-6"
-                      >
+                        onClick={toggleFavorite}
+                        >                   
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -118,49 +119,65 @@ function ApiK({ searchValue, setSearchValue, favorites, setFavorites, manageSort
                       </svg>
                     )}
                   </button>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                    data-slot="icon"
-                    className="w-4 h-4"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
-                  <span>john Doe</span>
-                </div>
-                {Array.from({ length: Element.difficulty }, (_, index) => (
-                  <svg
-                    key={index}
-                    className="w-4 h-4 text-yellow-300 relative"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 22 20"
-                  >
-                    <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
-                  </svg>
-                ))}
-              </div>
-              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ms-3">
-                {Element.category}
-              </span>
             </div>
-            <div className="flex-wrap flex justify-end">
-              <p className="text-1xl text-gray-900 dark:text-white">
-                {Element.description}
-              </p>
-              <a
-                href="#"
-                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-              >
-                En savoir plus
-              </a>
+            <div className="p-2">
+              <div className="px-5 ">
+                <a href="#">
+                  <h2 className="text-green-900 font-medium text-2xl">
+                    {Element.title}
+                  </h2>
+                </a>
+                <div className="flex items-center mt-2.5 mb-5 flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center space-x-1 rtl:space-x-reverse ">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                      data-slot="icon"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                    <span>john Doe</span>
+                  </div>
+                  <span className="flex">
+                    {Array.from({ length: Element.difficulty }, (_, index) => ( // Affiche des icônes de difficulté en fonction de la valeur de Element.difficulty
+                      <svg
+                        key={index}
+                        className="w-4 h-4 text-yellow-300 relative"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="currentColor"
+                        viewBox="0 0 22 20"
+                      >
+                        <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z" />
+                      </svg>
+                    ))}
+                  </span>
+                  <span className="flex gap-2 items-center bg-red-700 px-2 text-white rounded-full ">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon" class="w-4 h-4"><path fill-rule="evenodd" d="M5.25 2.25a3 3 0 0 0-3 3v4.318a3 3 0 0 0 .879 2.121l9.58 9.581c.92.92 2.39 1.186 3.548.428a18.849 18.849 0 0 0 5.441-5.44c.758-1.16.492-2.629-.428-3.548l-9.58-9.581a3 3 0 0 0-2.122-.879H5.25ZM6.375 7.5a1.125 1.125 0 1 0 0-2.25 1.125 1.125 0 0 0 0 2.25Z" clip-rule="evenodd"></path></svg>
+                    {Element.category}
+                  </span>
+                </div>
+              </div>
+              <div className="flex-wrap flex justify-end ">
+                <p className="text-1xl text-gray-900 dark:text-white">
+                  {Element.description}
+                </p>
+                <div className="p-2 text-right mt-auto">
+                  <a
+                    href="#"
+                    className="font-medium "
+                  >
+                    En savoir plus
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         ))
@@ -169,4 +186,4 @@ function ApiK({ searchValue, setSearchValue, favorites, setFavorites, manageSort
   );
 }
 
-export default ApiK;
+export default ApiK; // Exportation du composant ApiK
